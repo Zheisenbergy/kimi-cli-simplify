@@ -1,0 +1,2 @@
+[console_scripts]
+kimi-simplify = kimi_simplify.main:main

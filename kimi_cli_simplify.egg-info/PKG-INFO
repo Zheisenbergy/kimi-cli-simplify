@@ -1,0 +1,127 @@
+Metadata-Version: 2.4
+Name: kimi-cli-simplify
+Version: 0.1.0
+Summary: 简化版 Kimi CLI - 参考 MoonshotAI/kimi-cli 架构
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: openai>=1.0.0
+Requires-Dist: pydantic>=2.0.0
+
+# Kimi CLI Simplify
+
+参考 [MoonshotAI/kimi-cli](https://github.com/MoonshotAI/kimi-cli) 架构的简化版实现。
+
+## 架构对比
+
+| 模块 | kimi-cli (完整版) | kimi-cli-simplify (简化版) |
+|------|------------------|---------------------------|
+| **Soul** | `KimiSoul` - 异步处理 | `KimiSoul` - 同步处理 |
+| **Agent** | `Agent` + `Runtime` + `Context` | `Agent` + `Runtime` |
+| **Tools** | `CallableTool2` + Pydantic | `Tool` dataclass |
+| **Config** | TOML 配置文件 | 环境变量 |
+| **Session** | 持久化存储 | 内存存储 |
+| **Approval** | 完整的权限系统 | 简化版（YOLO 模式） |
+| **Skills** | 完整的 Skill 系统 | 无 |
+| **MCP** | 支持 MCP 工具 | 无 |
+| **UI** | Rich + Wire | 简单 print |
+
+## 目录结构
+
+```
+kimi-cli-simplify/
+├── kimi_simplify/              # 主包
+│   ├── __init__.py
+│   ├── config.py              # 配置管理（参考 config.py）
+│   ├── llm.py                 # LLM 接口（参考 llm.py）
+│   ├── main.py                # 主入口（参考 app.py）
+│   ├── soul/                  # Agent 核心（参考 soul/）
+│   │   ├── __init__.py
+│   │   ├── agent.py           # Agent 和 Runtime（参考 agent.py）
+│   │   └── kimisoul.py        # 对话循环（参考 kimisoul.py）
+│   ├── tools/                 # 工具系统（参考 tools/）
+│   │   ├── __init__.py
+│   │   └── builtins.py        # 内置工具
+│   └── utils/                 # 工具函数
+│       └── __init__.py
+├── pyproject.toml
+└── README.md
+```
+
+## 快速开始
+
+### 1. 安装依赖
+
+```bash
+cd /Users/zheisenbergy/code/agent/kimi-cli-simplify
+
+# 使用 uv
+uv sync
+
+# 或使用 pip
+pip install -e .
+```
+
+### 2. 配置 API Key
+
+```bash
+export OPENAI_API_KEY="your-moonshot-api-key"
+export OPENAI_BASE_URL="https://api.moonshot.cn/v1"  # 可选，默认使用 Moonshot
+```
+
+### 3. 运行
+
+```bash
+python -m kimi_simplify.main
+# 或
+kimi-simplify
+```
+
+## 核心流程
+
+```
+User Input
+    │
+    ▼
+┌─────────────┐
+│  KimiSoul   │
+│  .run_turn()│
+└─────────────┘
+    │
+    ├──▶ LLM.chat() ──▶ OpenAI API
+    │
+    ◀── Response ─────┘
+    │
+    ├──▶ 有 tool_calls? ──▶ 执行 Tool ──▶ 返回结果
+    │                            │
+    └────────────────────────────┘ (循环直到无工具调用)
+```
+
+## 工具列表
+
+| 工具 | 功能 | 对应原版的 |
+|------|------|-----------|
+| `ReadFile` | 读取文件 | `ReadFile` |
+| `WriteFile` | 写入文件 | `WriteFile` |
+| `StrReplaceFile` | 文本替换 | `StrReplaceFile` |
+| `Shell` | 执行命令 | `Shell` |
+| `Glob` | 文件查找 | `Glob` |
+| `Grep` | 内容搜索 | `Grep` |
+
+## 与原版的区别
+
+1. **同步 vs 异步**: 简化版使用同步 IO，原版使用 asyncio
+2. **无持久化**: 简化版不保存会话，原版保存到 SQLite
+3. **简化的工具系统**: 不使用 `kosong` 库的 `CallableTool2`
+4. **无权限确认**: 原版有完整的 Approval 系统，简化版只有 YOLO 模式
+5. **无 Skills**: 原版支持自定义 Skills，简化版只有内置工具
+6. **无 MCP**: 原版支持 MCP 工具，简化版不支持
+
+## 学习价值
+
+这个简化版保留了 kimi-cli 的核心架构设计：
+- **Soul 模式**: Agent 逻辑与 Runtime 分离
+- **Tool Registry**: 工具注册表模式
+- **对话循环**: Step/Turn 两级循环
+- **消息管理**: 维护完整的对话历史
+
+适合用来理解 kimi-cli 的核心原理，然后逐步添加复杂功能。

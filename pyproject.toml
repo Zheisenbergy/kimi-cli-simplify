@@ -1,0 +1,14 @@
+[project]
+name = "kimi-cli-simplify"
+version = "0.1.0"
+description = "简化版 Kimi CLI - 参考 MoonshotAI/kimi-cli 架构"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+kimi-simplify = "kimi_simplify.main:main"
